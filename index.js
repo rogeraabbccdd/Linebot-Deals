@@ -48,7 +48,9 @@ bot.on('message', function(event) {
           else {
             let reply = `找不到符合的遊戲，你是不是要找...\n`;
             for(let i=0;i<5;i++){
-              if(json.data.list[i]) reply += `- ${json.data.list[i].title}\n`;
+              if(json.data.list[i]) {
+                if((i == 0) || (i > 0 && json.data.list[i].title != json.data.list[i-1].title)) reply += `- ${json.data.list[i].title}\n`;
+              }
             }
             event.reply(reply);
           }
@@ -67,7 +69,7 @@ bot.on('message', function(event) {
               rp(`https://api.isthereanydeal.com/v01/game/prices/?key=${process.env.ITAD_KEY}&plains=${plain}&region=us&country=US&shops=${itadShops}`)
                 .then((res)=>{
                   let current = JSON.parse(res).data[plain].list[0];
-                  let replyText = `${name}\n歷史最低: ${lowest.price}USD, -${lowest.cut}%, ${lowestDate.toLocaleDateString()}在${lowest.shop.name}\n目前最低: ${current.price_new}USD, -${current.price_cut}%\n${current.url}`;
+                  let replyText = `${name}\n原價: ${current.price_old}USD\n歷史最低: ${lowest.price}USD, -${lowest.cut}%, ${lowestDate.toLocaleDateString()}在${lowest.shop.name}\n目前最低: ${current.price_new}USD, -${current.price_cut}%, 在${current.shop.name}\n${current.url}\n更多資訊:\nhttps://isthereanydeal.com/game/${plain}/info/`;
                   if(appId == -1) event.reply(replyText);
                   else event.reply([ {
                     type: 'image',
