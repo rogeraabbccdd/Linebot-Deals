@@ -1,6 +1,7 @@
 require('dotenv').config();
 const linebot = require('linebot');
 const rp = require('request-promise');
+const schedule = require('node-schedule');
 
 const bot = linebot({
   channelId: process.env.CHANNEL_ID,
@@ -30,7 +31,21 @@ const getSteamIDByPlain = (json, plain) => {
   else return -1;
 }
 
-const itadShops = "amazonus,bundlestars,chrono,direct2drive,dlgamer,dreamgame,fireflower,gamebillet,gamejolt,gamersgate,gamesplanet,gog,humblestore,humblewidgets,impulse,indiegalastore,indiegamestand,itchio,macgamestore,newegg,origin,paradox,savemi,silagames,squenix,steam,uplay,wingamestore";
+const itadShops = 'amazonus,bundlestars,chrono,direct2drive,dlgamer,dreamgame,fireflower,gamebillet,gamejolt,gamersgate,gamesplanet,gog,humblestore,humblewidgets,impulse,indiegalastore,indiegamestand,itchio,macgamestore,newegg,origin,paradox,savemi,silagames,squenix,steam,uplay,wingamestore';
+
+let exRateUSDTW = 30;
+
+const exRateUpdate = () => {
+  rp(`https://tw.rter.info/capi.php`).then((res)=>{
+    exRateUSDTW = Math.round(JSON.parse(res).USDTWD.Exrate * 100) / 100;
+  })
+}
+
+exRateUpdate();
+
+schedule.scheduleJob('* * 0 * * *', function(){
+  exRateUpdate();
+});
 
 bot.on('message', function(event) {
   const msg = event.message.text;
@@ -44,7 +59,7 @@ bot.on('message', function(event) {
         let json = JSON.parse(res);
         let find = getItadPlainByName(json, name);
         if(find.length == 0){
-          if(json.data.list.length == 0) event.reply("找不到符合的遊戲");
+          if(json.data.list.length == 0) event.reply('找不到符合的遊戲');
           else {
             let reply = `找不到符合的遊戲，你是不是要找...\n`;
             for(let i=0;i<5;i++){
@@ -69,28 +84,31 @@ bot.on('message', function(event) {
               rp(`https://api.isthereanydeal.com/v01/game/prices/?key=${process.env.ITAD_KEY}&plains=${plain}&region=us&country=US&shops=${itadShops}`)
                 .then((res)=>{
                   let current = JSON.parse(res).data[plain].list[0];
-                  let replyText = `${name}\n原價: ${current.price_old}USD\n歷史最低: ${lowest.price}USD, -${lowest.cut}%, ${lowestDate.toLocaleDateString()}在${lowest.shop.name}\n目前最低: ${current.price_new}USD, -${current.price_cut}%, 在${current.shop.name}\n${current.url}\n更多資訊:\nhttps://isthereanydeal.com/game/${plain}/info/`;
+                  let replyText = `${name}\n原價: ${current.price_old} USD / ${Math.round(current.price_old*exRateUSDTW*100)/100} TWD\n歷史最低: ${lowest.price} USD / ${Math.round(lowest.price*exRateUSDTW*100)/100} TWD, -${lowest.cut}%, ${lowestDate.toLocaleDateString()} 在 ${lowest.shop.name}\n目前最低: ${current.price_new} USD / ${Math.round(current.price_new*exRateUSDTW*100)/100} TWD, -${current.price_cut}%, 在 ${current.shop.name}\n${current.url}\n更多資訊:\nhttps://isthereanydeal.com/game/${plain}/info/`;
                   if(appId == -1) event.reply(replyText);
-                  else event.reply([ {
-                    type: 'image',
-                    originalContentUrl: `https://steamcdn-a.akamaihd.net/steam/apps/${appId}/header.jpg`,
-                    previewImageUrl: `https://steamcdn-a.akamaihd.net/steam/apps/${appId}/header.jpg`
-                  },  { type: 'text', text: replyText }])
+                  else {
+                      replyText += `\nhttps://steamdb.info/app/${appId}/`;
+                      event.reply([ {
+                        type: 'image',
+                        originalContentUrl: `https://steamcdn-a.akamaihd.net/steam/apps/${appId}/header.jpg`,
+                        previewImageUrl: `https://steamcdn-a.akamaihd.net/steam/apps/${appId}/header.jpg`
+                      },  { type: 'text', text: replyText }])
+                  }
                 })
                 .catch((err)=>{
                   console.log(err);
-                  event.reply("目前最低價查詢失敗，請稍後再試");
+                  event.reply('目前最低價查詢失敗，請稍後再試');
                 })
             })
             .catch((err)=>{
               console.log(err);
-              event.reply("歷史最低價查詢失敗，請稍後再試");
+              event.reply('歷史最低價查詢失敗，請稍後再試');
             })
         }
       })
       .catch((err)=>{
         console.log(err);
-        event.reply("遊戲資料查詢失敗，請稍後再試");
+        event.reply('遊戲資料查詢失敗，請稍後再試');
       })
   }
 });
