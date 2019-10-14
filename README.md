@@ -1,5 +1,6 @@
 # Deals Line Bot
 A linebot to get deals information form [isthereanydeal.com](https://isthereanydeal.com)  
+Click [here](https://line.me/R/ti/p/%40504mcsmm) to add the bot.
   
 ![preview](preview.png)  
   
