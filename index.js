@@ -45,7 +45,13 @@ bot.on('message', function(event) {
         let find = getItadPlainByName(json, name);
         if(find.length == 0){
           if(json.data.list.length == 0) event.reply("找不到符合的遊戲");
-          else event.reply(`找不到符合的遊戲，你是不是要找 ${json.data.list[0].title} ?`)
+          else {
+            let reply = `找不到符合的遊戲，你是不是要找...\n`;
+            for(let i=0;i<5;i++){
+              if(json.data.list[i]) reply += `- ${json.data.list[i].title}\n`;
+            }
+            event.reply(reply);
+          }
         }
         else {
           let plain = find[0].plain;
@@ -56,6 +62,7 @@ bot.on('message', function(event) {
             .then((res)=>{
               let lowest = JSON.parse(res).data[plain];
               let lowestDate = new Date(lowest.added*1000);
+              
               // get current best
               rp(`https://api.isthereanydeal.com/v01/game/prices/?key=${process.env.ITAD_KEY}&plains=${plain}&region=us&country=US&shops=${itadShops}`)
                 .then((res)=>{
