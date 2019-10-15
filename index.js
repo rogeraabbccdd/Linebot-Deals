@@ -15,7 +15,7 @@ Date.prototype.toLocaleDateString = function () {
 
 const getItadPlainByName = (json, name) => {
   return json.data.list.filter((list)=>{
-    return list.title == name;
+    return list.title.toUpperCase() == name.toUpperCase();
   });
 }
 
