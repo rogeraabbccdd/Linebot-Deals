@@ -61,11 +61,23 @@ bot.on('message', function(event) {
         if(find.length == 0){
           if(json.data.list.length == 0) event.reply('找不到符合的遊戲');
           else {
+            json.data.list.sort((a, b)=>{
+              return a.title.length - b.title.length || a.title.localeCompare(b.title);
+            });
             let reply = `找不到符合的遊戲，你是不是要找...\n`;
+
+            // j = array index
+            let j = 0;
+            // i = max 5 suggestions
             for(let i=0;i<5;i++){
-              let rand = json.data.list[Math.floor(Math.random() * json.data.list.length)].title;
-              if((i == 0) || (i > 0 && !reply.includes(rand))) reply += `- ${rand}\n`;
-              else i--;
+              if(json.data.list[j]) {
+                if((j == 0) || (j > 0 && !reply.includes(json.data.list[j].title))){
+                  reply += `- ${json.data.list[j].title}\n`;
+                }
+                else i--;
+              }
+              else break;
+              j++;
             }
             event.reply(reply);
           }
@@ -84,8 +96,17 @@ bot.on('message', function(event) {
               rp(`https://api.isthereanydeal.com/v01/game/prices/?key=${process.env.ITAD_KEY}&plains=${plain}&region=us&country=US&shops=${itadShops}`)
                 .then((res)=>{
                   let current = JSON.parse(res).data[plain].list[0];
-                  let replyText = `${name}\n原價: ${current.price_old} USD / ${Math.round(current.price_old*exRateUSDTW*100)/100} TWD\n歷史最低: ${lowest.price} USD / ${Math.round(lowest.price*exRateUSDTW*100)/100} TWD, -${lowest.cut}%, ${lowestDate.toLocaleDateString()} 在 ${lowest.shop.name}\n目前最低: ${current.price_new} USD / ${Math.round(current.price_new*exRateUSDTW*100)/100} TWD, -${current.price_cut}%, 在 ${current.shop.name}\n${current.url}\n更多資訊:\nhttps://isthereanydeal.com/game/${plain}/info/`;
+                  let replyText = `${name}\n`+
+                                `原價: ${current.price_old} USD / ${Math.round(current.price_old*exRateUSDTW*100)/100} TWD\n`+
+                                `歷史最低: ${lowest.price} USD / ${Math.round(lowest.price*exRateUSDTW*100)/100} TWD, -${lowest.cut}%, ${lowestDate.toLocaleDateString()} 在 ${lowest.shop.name}\n`+
+                                `目前最低: ${current.price_new} USD / ${Math.round(current.price_new*exRateUSDTW*100)/100} TWD, -${current.price_cut}%, 在 ${current.shop.name}\n`+
+                                `${current.url}\n`+
+                                `更多資訊:\nhttps://isthereanydeal.com/game/${plain}/info/`;
+                  
+                  // non steam
                   if(appId == -1) event.reply(replyText);
+
+                  // is steam
                   else {
                       replyText += `\nhttps://steamdb.info/app/${appId}/`;
                       event.reply([ {
