@@ -63,9 +63,9 @@ bot.on('message', function(event) {
           else {
             let reply = `找不到符合的遊戲，你是不是要找...\n`;
             for(let i=0;i<5;i++){
-              if(json.data.list[i]) {
-                if((i == 0) || (i > 0 && json.data.list[i].title != json.data.list[i-1].title)) reply += `- ${json.data.list[i].title}\n`;
-              }
+              let rand = json.data.list[Math.floor(Math.random() * json.data.list.length)].title;
+              if((i == 0) || (i > 0 && !reply.includes(rand))) reply += `- ${rand}\n`;
+              else i--;
             }
             event.reply(reply);
           }
@@ -92,7 +92,7 @@ bot.on('message', function(event) {
                         type: 'image',
                         originalContentUrl: `https://steamcdn-a.akamaihd.net/steam/apps/${appId}/header.jpg`,
                         previewImageUrl: `https://steamcdn-a.akamaihd.net/steam/apps/${appId}/header.jpg`
-                      },  { type: 'text', text: replyText }])
+                      },  { type: 'text', text: replyText }]);
                   }
                 })
                 .catch((err)=>{
