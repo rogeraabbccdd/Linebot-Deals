@@ -132,22 +132,21 @@ bot.on('message', function(event) {
                           // check ok
                           if(appTWPrice[appInfo.id].success && typeof appTWPrice[appInfo.id].data.length != 'array') {
                             let price_overview = appTWPrice[appInfo.id].data.price_overview;
-                            replyTextSteam += `目前價格: ${price_overview.final_formatted}, `+
-                                              `原價 ${price_overview.initial_formatted}, ` +
-                                              `-${price_overview.discount_percent}%`
+                            replyTextSteam += `原價: ${price_overview.initial_formatted.length == 0 ? price_overview.final_formatted : price_overview.initial_formatted}, \n` +
+                                              `目前價格: ${price_overview.final_formatted}, -${price_overview.discount_percent}%\n`
 
                             // check steamdb for history low
                             cloudscraper.get(`https://steamdb.info/api/ExtensionGetPrice/?appid=${appInfo.id}&currency=TWD`)
                               .then((res)=>{
                                 let json = JSON.parse(res);
-                                if(json.success) replyTextSteam += `歷史最低: ${json.data.lowest.price}, -${json.data.lowest.discount}%, ${new Date(json.data.lowest.date).toLocaleDateString()}`;
-                                else replyTextSteam += `歷史最低: SteamDB 查詢失敗`;
+                                if(json.success) replyTextSteam += `歷史最低: ${json.data.lowest.price}, -${json.data.lowest.discount}%, ${new Date(json.data.lowest.date).toLocaleDateString()}\n`;
+                                else replyTextSteam += `歷史最低: SteamDB 查詢失敗\n`;
 
                                 event.reply([ replyImage, { type: 'text', text: replyTextDeal + replyTextSteam + replyTextInfo }]);
                               })
                               .catch((err)=>{
                                 console.log(err);
-                                replyTextSteam += `歷史最低: SteamDB 查詢失敗，請求被對方拒絕`;
+                                replyTextSteam += `歷史最低: SteamDB 查詢失敗，請求被對方拒絕\n`;
 
                                 event.reply([ replyImage, { type: 'text', text: replyTextDeal + replyTextSteam + replyTextInfo }]);
                               });
@@ -170,10 +169,9 @@ bot.on('message', function(event) {
                           let appTWPrice = JSON.parse(res);
                           if(appTWPrice[appInfo.id].success) {
                             let price = appTWPrice[appInfo.id].data.price
-                            replyTextSteam += `目前價格:  NT$ ${price.final/100}, `+
-                                                `原價:  NT$ ${price.initial/100}, ` +
-                                                `-${price.discount_percent}%` +
-                                                `單買原價:  NT$ ${price.individual/100}`;
+                            replyTextSteam += `原價:  NT$ ${price.initial/100}\n` +
+                                              `單買原價:  NT$ ${price.individual/100}\n` +
+                                              `目前價格:  NT$ ${price.final/100}, -${price.discount_percent}%\n`;
                             
                             event.reply(replyTextDeal + replyTextSteam + replyTextInfo);
                           }
