@@ -16,13 +16,13 @@ Date.prototype.toLocaleDateString = function () {
 
 const getItadPlainByName = (json, name) => {
   return json.data.list.filter((list)=>{
-    return list.title.toUpperCase() == name.toUpperCase();
+    return list.title.trim().toUpperCase() === name.trim().toUpperCase();
   });
 }
 
 const getSteamInfoByPlain = (json, plain) => {
   let steam = json.data.list.filter((list)=>{
-    return list.plain == plain && list.shop.id == 'steam';
+    return list.plain === plain && list.shop.id === 'steam';
   });
   if(steam.length > 0){
     let steamUrl = steam[0].urls.buy;
@@ -50,7 +50,7 @@ schedule.scheduleJob('* * 0 * * *', function(){
 
 bot.on('message', function(event) {
   const msg = event.message.text;
-  if (msg && msg.substring(0, 6) == '!itad ') {
+  if (msg && msg.substring(0, 6) === '!itad ') {
     let name = msg.split('!itad ')[1];
     let q = encodeURIComponent(name.trim());
 
@@ -59,8 +59,8 @@ bot.on('message', function(event) {
       .then((res)=>{
         let json = JSON.parse(res);
         let find = getItadPlainByName(json, name);
-        if(find.length == 0){
-          if(json.data.list.length == 0) event.reply('找不到符合的遊戲');
+        if(find.length === 0){
+          if(json.data.list.length === 0) event.reply('找不到符合的遊戲');
           else {
             json.data.list.sort((a, b)=>{
               return a.title.length - b.title.length || a.title.localeCompare(b.title);
@@ -72,7 +72,7 @@ bot.on('message', function(event) {
             // i = max 5 suggestions
             for(let i=0;i<5;i++){
               if(json.data.list[j]) {
-                if((j == 0) || (j > 0 && !reply.includes(json.data.list[j].title))){
+                if((j === 0) || (j > 0 && !reply.includes(json.data.list[j].title))){
                   reply += `- ${json.data.list[j].title}\n`;
                 }
                 else i--;
@@ -118,7 +118,7 @@ bot.on('message', function(event) {
                                     `https://steamdb.info/${appInfo.type}/${appInfo.id}/`;
 
                     // get twd info
-                    if(appInfo.type == 'app'){
+                    if(appInfo.type === 'app'){
                       let replyImage = {
                           type: 'image',
                           originalContentUrl: `https://steamcdn-a.akamaihd.net/steam/apps/${appInfo.id}/header.jpg`,
@@ -132,7 +132,7 @@ bot.on('message', function(event) {
                           // check ok
                           if(appTWPrice[appInfo.id].success && typeof appTWPrice[appInfo.id].data.length != 'array') {
                             let price_overview = appTWPrice[appInfo.id].data.price_overview;
-                            replyTextSteam += `原價: ${price_overview.initial_formatted.length == 0 ? price_overview.final_formatted : price_overview.initial_formatted}, \n` +
+                            replyTextSteam += `原價: ${price_overview.initial_formatted.length === 0 ? price_overview.final_formatted : price_overview.initial_formatted}, \n` +
                                               `目前價格: ${price_overview.final_formatted}, -${price_overview.discount_percent}%\n`
 
                             // check steamdb for history low
@@ -163,7 +163,7 @@ bot.on('message', function(event) {
                           event.reply([ replyImage, { type: 'text', text: replyTextDeal + replyTextSteam + replyTextInfo }]);
                         })
                     }
-                    else if(appInfo.type == 'sub'){
+                    else if(appInfo.type === 'sub'){
                       rp(`https://store.steampowered.com/api/packagedetails/?packageids=${appInfo.id}&cc=tw`)
                         .then((res)=>{
                           let appTWPrice = JSON.parse(res);
