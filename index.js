@@ -152,6 +152,7 @@ const getItadData = async (name) => {
       }
 
       replyText += rInfo
+      reply.push({ type: 'text', text: replyText })
     }
   } catch (err) {
     console.log(err)
