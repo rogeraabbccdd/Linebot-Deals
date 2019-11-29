@@ -108,6 +108,7 @@ const getItadData = async (name) => {
         for (const b of bundle.list) {
           rBundle += `${b.title}, ~${formatDate(new Date(b.expiry * 1000))}\n${b.url}`
         }
+        rBundle += '\n'
       }
 
       replyText += rDeal + rBundle
