@@ -1,218 +1,174 @@
-require('dotenv').config();
-const linebot = require('linebot');
-const rp = require('request-promise');
-const schedule = require('node-schedule');
-const cloudscraper = require('cloudscraper');
+require('dotenv').config()
+const linebot = require('linebot')
+const rp = require('request-promise')
+const schedule = require('node-schedule')
+const cloudscraper = require('cloudscraper')
 
 const bot = linebot({
   channelId: process.env.CHANNEL_ID,
   channelSecret: process.env.CHANNEL_SECRET,
   channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN
-});
+})
 
-Date.prototype.toLocaleDateString = function () {
-  return `${this.getFullYear()}年${this.getMonth() + 1}月${this.getDate()}日`;
-};
-
-const getItadPlainByName = (json, name) => {
-  return json.data.list.filter((list)=>{
-    return list.title.trim().toUpperCase() === name.trim().toUpperCase();
-  });
+const formatDate = (date) => {
+  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
 }
+
+const getItadPlainByName = (json, name) => json.data.list.filter((list) => list.title.trim().toUpperCase() === name.trim().toUpperCase())
 
 const getSteamInfoByPlain = (json, plain) => {
-  let steam = json.data.list.filter((list)=>{
-    return list.plain === plain && list.shop.id === 'steam';
-  });
-  if(steam.length > 0){
-    let steamUrl = steam[0].urls.buy;
-    let info = steamUrl.match( /\/(app|sub|bundle|friendsthatplay|gamecards|recommended)\/([0-9]{1,7})/ );
-    return info ? {id: parseInt( info[ 2 ], 10 ), type: info[1] }: { id: -1, type: 'null'};
+  const steam = json.data.list.filter((list) => list.plain === plain && list.shop.id === 'steam')
+  if (steam.length > 0) {
+    const steamUrl = steam[0].urls.buy
+    const info = steamUrl.match(/\/(app|sub|bundle|friendsthatplay|gamecards|recommended)\/([0-9]{1,7})/)
+    return info ? { id: parseInt(info[2], 10), type: info[1] } : { id: -1, type: 'null' }
   }
-  else return {id: -1, type: 'null'};
+  return { id: -1, type: 'null' }
 }
 
-const itadShops = 'amazonus,bundlestars,chrono,direct2drive,dlgamer,dreamgame,fireflower,gamebillet,gamejolt,gamersgate,gamesplanet,gog,humblestore,humblewidgets,impulse,indiegalastore,indiegamestand,itchio,macgamestore,newegg,origin,paradox,savemi,silagames,squenix,steam,uplay,wingamestore';
+const itadShops = 'amazonus,bundlestars,chrono,direct2drive,dlgamer,dreamgame,fireflower,gamebillet,gamejolt,gamersgate,gamesplanet,gog,humblestore,humblewidgets,impulse,indiegalastore,indiegamestand,itchio,macgamestore,newegg,origin,paradox,savemi,silagames,squenix,steam,uplay,wingamestore'
 
-let exRateUSDTW = 30;
+let exRateUSDTW = 30
 
 const exRateUpdate = () => {
-  rp(`https://tw.rter.info/capi.php`).then((res)=>{
-    exRateUSDTW = Math.round(JSON.parse(res).USDTWD.Exrate * 100) / 100;
+  rp('https://tw.rter.info/capi.php').then((res) => {
+    exRateUSDTW = Math.round(JSON.parse(res).USDTWD.Exrate * 100) / 100
   })
 }
 
-exRateUpdate();
+exRateUpdate()
 
-schedule.scheduleJob('* * 0 * * *', function(){
-  exRateUpdate();
-});
+schedule.scheduleJob('* * 0 * * *', () => {
+  exRateUpdate()
+})
 
-bot.on('message', function(event) {
-  const msg = event.message.text;
-  if (msg && msg.substring(0, 6) === '!itad ') {
-    let name = msg.split('!itad ')[1];
-    let q = encodeURIComponent(name.trim());
+const getItadData = async (name) => {
+  const reply = []
+  let replyText = ''
+  try {
+    const query = encodeURIComponent(name.trim())
+    let htmlString = ''
 
-    // Get plain
-    rp(`https://api.isthereanydeal.com/v01/search/search/?key=${process.env.ITAD_KEY}&q=${q}&offset=&limit=&region=us&country=US&shops=${itadShops}`)
-      .then((res)=>{
-        let json = JSON.parse(res);
-        let find = getItadPlainByName(json, name);
-        if(find.length === 0){
-          if(json.data.list.length === 0) event.reply('找不到符合的遊戲');
-          else {
-            json.data.list.sort((a, b)=>{
-              return a.title.length - b.title.length || a.title.localeCompare(b.title);
-            });
-            let reply = `找不到符合的遊戲，你是不是要找...\n`;
+    /* search game */
+    htmlString = await rp(`https://api.isthereanydeal.com/v01/search/search/?key=${process.env.ITAD_KEY}&q=${query}&offset=&limit=&region=us&country=US&shops=${itadShops}`)
+    const searchJson = JSON.parse(htmlString)
+    const find = getItadPlainByName(searchJson, name)
+    if (find.length === 0) {
+      if (searchJson.data.list.length === 0) reply.push({ type: 'text', text: '找不到符合的遊戲' })
+      else {
+        let suggestions = ''
+        searchJson.data.list.sort((a, b) => a.title.length - b.title.length || a.title.localeCompare(b.title))
+        suggestions = '找不到符合的遊戲，你是不是要找...\n'
 
-            // j = array index
-            let j = 0;
-            // i = max 5 suggestions
-            for(let i=0;i<5;i++){
-              if(json.data.list[j]) {
-                if((j === 0) || (j > 0 && !reply.includes(json.data.list[j].title))){
-                  reply += `- ${json.data.list[j].title}\n`;
-                }
-                else i--;
-              }
-              else break;
-              j++;
-            }
-            event.reply(reply);
+        // j = array index
+        let j = 0
+        // i = max 5 suggestions
+        for (let i = 0; i < 5; i++) {
+          if (searchJson.data.list[j]) {
+            if ((j === 0) || (j > 0 && !reply.includes(searchJson.data.list[j].title))) {
+              suggestions += `- ${searchJson.data.list[j].title}\n`
+            } else i--
+          } else break
+          j++
+        }
+
+        reply.push({ type: 'text', text: suggestions })
+      }
+    } else {
+      const { plain } = find[0]
+      const appTitle = find[0].title
+      const appInfo = getSteamInfoByPlain(searchJson, plain)
+
+      htmlString = await rp(`https://api.isthereanydeal.com/v01/game/lowest/?key=${process.env.ITAD_KEY}&plains=${plain}&shops=${itadShops}`)
+      const lowest = JSON.parse(htmlString).data[plain]
+      htmlString = await rp(`https://api.isthereanydeal.com/v01/game/prices/?key=${process.env.ITAD_KEY}&plains=${plain}&shops=${itadShops}`)
+      const current = JSON.parse(htmlString).data[plain].list[0]
+
+      const rDeal = `${appTitle}\n` +
+        '.\n' +
+        'IsThereAnyDeal:\n' +
+        `原價: ${current.price_old} USD / ${Math.round(current.price_old * exRateUSDTW * 100) / 100} TWD\n` +
+        `目前最低: ${current.price_new} USD / ${Math.round(current.price_new * exRateUSDTW * 100) / 100} TWD, -${current.price_cut}%, 在 ${current.shop.name}\n` +
+        `歷史最低: ${lowest.price} USD / ${Math.round(lowest.price * exRateUSDTW * 100) / 100} TWD, -${lowest.cut}%, ${formatDate(new Date(lowest.added * 1000))} 在 ${lowest.shop.name}\n` +
+        `${current.url}\n`
+
+      let rInfo = '.\n' +
+        '更多資訊:\n' +
+        `https://isthereanydeal.com/game/${plain}/info/\n`
+
+      htmlString = await rp(`https://api.isthereanydeal.com/v01/game/bundles/?key=${process.env.ITAD_KEY}&plains=${plain}&expired=0`)
+      const bundle = JSON.parse(htmlString).data[plain]
+
+      let rBundle = '.\n' +
+        '入包資訊:\n' +
+        `總入包次數: ${bundle.total}\n` +
+        '目前入包:\n'
+
+      for (const b of bundle.list) {
+        rBundle += `${b.title}, ~${formatDate(new Date(b.expiry * 1000))}\n${b.url}`
+      }
+
+      replyText += rDeal + rBundle
+
+      /* is steam */
+      if (appInfo.id !== -1) {
+        let rSteam = '.\nSteam:\n'
+        rInfo += `https://store.steampowered.com/${appInfo.type}/${appInfo.id}/\n` +
+          `https://steamdb.info/${appInfo.type}/${appInfo.id}/`
+
+        if (appInfo.type === 'app') {
+          reply.push({
+            type: 'image',
+            originalContentUrl: `https://steamcdn-a.akamaihd.net/steam/apps/${appInfo.id}/header.jpg`,
+            previewImageUrl: `https://steamcdn-a.akamaihd.net/steam/apps/${appInfo.id}/header.jpg`
+          })
+
+          htmlString = await rp(`http://store.steampowered.com/api/appdetails/?appids=${appInfo.id}&cc=tw&filters=price_overview`)
+          const steamOV = JSON.parse(htmlString)
+
+          if (steamOV[appInfo.id].success && typeof steamOV[appInfo.id].data === 'object') {
+            const price = steamOV[appInfo.id].data.price_overview
+            rSteam += `原價: ${price.initial_formatted.length === 0 ? price.final_formatted : price.initial_formatted}, \n` +
+              `目前價格: ${price.final_formatted}, -${price.discount_percent}%\n`
+
+            htmlString = await cloudscraper(`https://steamdb.info/api/ExtensionGetPrice/?appid=${appInfo.id}&currency=TWD`)
+            const steamLow = JSON.parse(htmlString)
+            if (steamLow.success) rSteam += `歷史最低: ${steamLow.data.lowest.price}, -${steamLow.data.lowest.discount}%, ${formatDate(new Date(steamLow.data.lowest.date))}\n`
+          }
+        } else if (appInfo.type === 'sub') {
+          htmlString = await rp(`https://store.steampowered.com/api/packagedetails/?packageids=${appInfo.id}&cc=tw`)
+          const steamOV = JSON.parse(htmlString)
+          if (steamOV[appInfo.id].success) {
+            const { price } = steamOV[appInfo.id].data
+            rSteam += `原價:  NT$ ${price.initial / 100}\n` +
+              `單買原價:  NT$ ${price.individual / 100}\n` +
+              `目前價格:  NT$ ${price.final / 100}, -${price.discount_percent}%\n`
           }
         }
-        else {
-          let plain = find[0].plain;
-          let appTitle = find[0].title;
-          let appInfo = getSteamInfoByPlain(json, plain);
 
-          // get history best
-          rp(`https://api.isthereanydeal.com/v01/game/lowest/?key=${process.env.ITAD_KEY}&plains=${plain}&region=us&country=US&shops=${itadShops}`)
-            .then((res)=>{
-              let lowest = JSON.parse(res).data[plain];
-              let lowestDate = new Date(lowest.added*1000);
-              
-              // get current best
-              rp(`https://api.isthereanydeal.com/v01/game/prices/?key=${process.env.ITAD_KEY}&plains=${plain}&region=us&country=US&shops=${itadShops}`)
-                .then((res)=>{
-                  let current = JSON.parse(res).data[plain].list[0];
-                  let replyTextDeal = `${appTitle}\n`+
-                                `.\n` +
-                                `IsThereAnyDeal:\n` +
-                                `原價: ${current.price_old} USD / ${Math.round(current.price_old*exRateUSDTW*100)/100} TWD\n` +
-                                `目前最低: ${current.price_new} USD / ${Math.round(current.price_new*exRateUSDTW*100)/100} TWD, -${current.price_cut}%, 在 ${current.shop.name}\n` +
-                                `歷史最低: ${lowest.price} USD / ${Math.round(lowest.price*exRateUSDTW*100)/100} TWD, -${lowest.cut}%, ${lowestDate.toLocaleDateString()} 在 ${lowest.shop.name}\n` +
-                                `${current.url}\n`;
-                  
-                  let replyTextSteam = '.\nSteam:\n';
+        replyText += rSteam
+      }
 
-                  let replyTextInfo = '.\n' +
-                                    `更多資訊:\n` +
-                                    `https://isthereanydeal.com/game/${plain}/info/\n`;
-                  
-                  // is steam
-                  if(appInfo.id != -1) {
-                    replyTextInfo += `https://store.steampowered.com/${appInfo.type}/${appInfo.id}/\n` + 
-                                    `https://steamdb.info/${appInfo.type}/${appInfo.id}/`;
-
-                    // get twd info
-                    if(appInfo.type === 'app'){
-                      let replyImage = {
-                          type: 'image',
-                          originalContentUrl: `https://steamcdn-a.akamaihd.net/steam/apps/${appInfo.id}/header.jpg`,
-                          previewImageUrl: `https://steamcdn-a.akamaihd.net/steam/apps/${appInfo.id}/header.jpg`
-                      };
-
-                      rp(`http://store.steampowered.com/api/appdetails/?appids=${appInfo.id}&cc=tw&filters=price_overview`)
-                        .then((res)=>{
-                          let appTWPrice = JSON.parse(res);
-                          
-                          // check ok
-                          if(appTWPrice[appInfo.id].success && typeof appTWPrice[appInfo.id].data.length != 'array') {
-                            let price_overview = appTWPrice[appInfo.id].data.price_overview;
-                            replyTextSteam += `原價: ${price_overview.initial_formatted.length === 0 ? price_overview.final_formatted : price_overview.initial_formatted}, \n` +
-                                              `目前價格: ${price_overview.final_formatted}, -${price_overview.discount_percent}%\n`
-
-                            // check steamdb for history low
-                            cloudscraper.get(`https://steamdb.info/api/ExtensionGetPrice/?appid=${appInfo.id}&currency=TWD`)
-                              .then((res)=>{
-                                let json = JSON.parse(res);
-                                if(json.success) replyTextSteam += `歷史最低: ${json.data.lowest.price}, -${json.data.lowest.discount}%, ${new Date(json.data.lowest.date).toLocaleDateString()}\n`;
-                                else replyTextSteam += `歷史最低: SteamDB 查詢失敗\n`;
-
-                                event.reply([ replyImage, { type: 'text', text: replyTextDeal + replyTextSteam + replyTextInfo }]);
-                              })
-                              .catch((err)=>{
-                                console.log(err);
-                                replyTextSteam += `歷史最低: SteamDB 查詢失敗，請求被對方拒絕\n`;
-
-                                event.reply([ replyImage, { type: 'text', text: replyTextDeal + replyTextSteam + replyTextInfo }]);
-                              });
-                          }
-                          else {
-                            replyTextSteam += '目前價格: Steam 查詢失敗\n';
-                            
-                            event.reply([ replyImage, { type: 'text', text: replyTextDeal + replyTextSteam + replyTextInfo }]);
-                          }
-                        })
-                        .catch((err)=>{
-                          console.log(err);
-                          replyTextSteam += '目前價格: Steam 查詢失敗\n'
-                          event.reply([ replyImage, { type: 'text', text: replyTextDeal + replyTextSteam + replyTextInfo }]);
-                        })
-                    }
-                    else if(appInfo.type === 'sub'){
-                      rp(`https://store.steampowered.com/api/packagedetails/?packageids=${appInfo.id}&cc=tw`)
-                        .then((res)=>{
-                          let appTWPrice = JSON.parse(res);
-                          if(appTWPrice[appInfo.id].success) {
-                            let price = appTWPrice[appInfo.id].data.price
-                            replyTextSteam += `原價:  NT$ ${price.initial/100}\n` +
-                                              `單買原價:  NT$ ${price.individual/100}\n` +
-                                              `目前價格:  NT$ ${price.final/100}, -${price.discount_percent}%\n`;
-                            
-                            event.reply(replyTextDeal + replyTextSteam + replyTextInfo);
-                          }
-                          else {
-                            replyTextSteam += '目前價格: Steam 沒有提供這個組合包的資料\n'
-                            event.reply(replyTextDeal + replyTextSteam + replyTextInfo);
-                          }
-                        })
-                        .catch((err)=>{
-                          console.log(err);
-                          replyTextSteam += '目前價格: Steam 查詢失敗\n'
-                          event.reply(replyTextDeal + replyTextSteam + replyTextInfo);
-                        })
-                    }
-                    else {
-                      replyTextSteam += 'Steam 沒有提供這個組合包的資料\n'
-                      event.reply(replyTextDeal + replyTextSteam + replyTextInfo);
-                    }
-                  }
-                  else {
-                    event.reply(replyTextDeal + replyTextInfo);
-                  }
-                })
-                .catch((err)=>{
-                  console.log(err);
-                  event.reply('IsThereAnyDeal 目前最低價查詢失敗，請稍後再試');
-                })
-            })
-            .catch((err)=>{
-              console.log(err);
-              event.reply('IsThereAnyDeal 歷史最低價查詢失敗，請稍後再試');
-            })
-        }
-      })
-      .catch((err)=>{
-        console.log(err);
-        event.reply('遊戲資料查詢失敗，請稍後再試');
-      })
+      replyText += rInfo
+    }
+  } catch (err) {
+    console.log(err)
+    if (replyText.length > 0) reply.push({ type: 'text', text: replyText })
+    else reply.push({ type: 'text', text: '遊戲資料查詢失敗，請稍後再試' })
   }
-});
+  return reply
+}
+
+bot.on('message', (event) => {
+  const msg = event.message.text
+  if (msg && msg.substring(0, 6) === '!itad ') {
+    const name = msg.split('!itad ')[1]
+    getItadData(name).then((reply) => {
+      event.reply(reply)
+    })
+  }
+})
 
 bot.listen('/', process.env.PORT, () => {
-  console.log('Bot is ready in ' + process.env.PORT);
-});
+  console.log(`Bot is ready in ${process.env.PORT}`)
+})
