@@ -101,11 +101,13 @@ const getItadData = async (name) => {
 
       let rBundle = '.\n' +
         '入包資訊:\n' +
-        `總入包次數: ${bundle.total}\n` +
-        '目前入包:\n'
+        `總入包次數: ${bundle.total}\n`
 
-      for (const b of bundle.list) {
-        rBundle += `${b.title}, ~${formatDate(new Date(b.expiry * 1000))}\n${b.url}`
+      if (bundle.list.length > 0) {
+        rBundle += '目前入包:\n'
+        for (const b of bundle.list) {
+          rBundle += `${b.title}, ~${formatDate(new Date(b.expiry * 1000))}\n${b.url}`
+        }
       }
 
       replyText += rDeal + rBundle
