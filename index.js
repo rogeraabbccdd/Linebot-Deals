@@ -165,11 +165,24 @@ const getItadData = async (name) => {
 
 bot.on('message', (event) => {
   const msg = event.message.text
-  if (msg && msg.substring(0, 6) === '!itad ') {
-    const name = msg.split('!itad ')[1]
-    getItadData(name).then((reply) => {
+  if (msg) {
+    if (msg === '!itadhelp') {
+      const reply =
+        '歡迎使用 Steam 查價機器人\n\n' +
+        '機器人指令:\n' +
+        '◆ "!itad 遊戲名稱" - 查詢遊戲資訊\n' +
+        '◆ "!itadhelp" - 顯示幫助訊息\n' +
+        '\n相關連結:\n' +
+        '◆ 巴哈文章: https://ppt.cc/fMvT6x\n' +
+        '◆ 機器人ID:  @504mcsmm\n' +
+        '◆ 機器人原始碼: https://ppt.cc/f2YdNx\n'
       event.reply(reply)
-    })
+    } else if (msg.substring(0, 6) === '!itad ') {
+      const name = msg.split('!itad ')[1]
+      getItadData(name).then((reply) => {
+        event.reply(reply)
+      })
+    }
   }
 })
 
