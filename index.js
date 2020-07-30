@@ -518,7 +518,7 @@ const getItadData = async (name) => {
 
       reply.push({
         type: 'flex',
-        altText: 'this is a flex message',
+        altText: `查詢 ${appTitle} 的結果`,
         contents: {
           type: 'carousel',
           contents: [flex]
