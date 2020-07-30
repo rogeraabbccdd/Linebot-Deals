@@ -44,7 +44,6 @@ schedule.scheduleJob('* * 0 * * *', () => {
 
 const getItadData = async (name) => {
   const reply = []
-  let replyText = ''
   try {
     const query = encodeURIComponent(name.trim())
     let htmlString = ''
@@ -87,86 +86,452 @@ const getItadData = async (name) => {
       htmlString = await rp(`https://api.isthereanydeal.com/v01/game/prices/?key=${process.env.ITAD_KEY}&plains=${plain}&shops=${itadShops}`)
       const current = JSON.parse(htmlString).data[plain].list[0]
 
-      const rDeal = `${appTitle}\n` +
-        '.\n' +
-        'IsThereAnyDeal:\n' +
-        `原價: ${current.price_old} USD / ${Math.round(current.price_old * exRateUSDTW * 100) / 100} TWD\n` +
-        `目前最低: ${current.price_new} USD / ${Math.round(current.price_new * exRateUSDTW * 100) / 100} TWD, -${current.price_cut}%, 在 ${current.shop.name}\n` +
-        `歷史最低: ${lowest.price} USD / ${Math.round(lowest.price * exRateUSDTW * 100) / 100} TWD, -${lowest.cut}%, ${formatDate(new Date(lowest.added * 1000))} 在 ${lowest.shop.name}\n` +
-        `${current.url}\n`
-
-      let rInfo = '.\n' +
-        '更多資訊:\n' +
-        `https://isthereanydeal.com/game/${plain}/info/\n`
-
-      htmlString = await rp(`https://api.isthereanydeal.com/v01/game/bundles/?key=${process.env.ITAD_KEY}&plains=${plain}&expired=0`)
-      const bundle = JSON.parse(htmlString).data[plain]
-
-      let rBundle = '.\n' +
-        '入包資訊:\n' +
-        `總入包次數: ${bundle.total}\n`
-
-      if (bundle.list.length > 0) {
-        rBundle += '目前入包:\n'
-        for (const b of bundle.list) {
-          rBundle += `${b.title}, ~${formatDate(new Date(b.expiry * 1000))}\n${b.url}`
+      const flex = {
+        type: 'bubble',
+        body: {
+          type: 'box',
+          layout: 'vertical',
+          spacing: 'md',
+          contents: []
+        },
+        footer: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'button',
+              style: 'link',
+              action: {
+                type: 'uri',
+                label: 'IsThereAnyDeal',
+                uri: `https://isthereanydeal.com/game/${plain}/info/`
+              },
+              height: 'sm'
+            }
+          ]
+        },
+        styles: {
+          footer: {
+            separator: true
+          }
         }
-        rBundle += '\n'
       }
 
-      replyText += rDeal + rBundle
+      flex.body.contents.push(
+        // title text
+        {
+          type: 'text',
+          text: appTitle,
+          size: 'xl',
+          weight: 'bold'
+        },
+        // itad info
+        {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'box',
+              layout: 'baseline',
+              contents: [
+                {
+                  type: 'icon',
+                  url: 'https://raw.githubusercontent.com/rogeraabbccdd/Linebot-Deals/flex/itad.png'
+                },
+                {
+                  type: 'text',
+                  text: 'IsThereAnyDeal',
+                  weight: 'bold',
+                  margin: 'sm',
+                  flex: 0,
+                  align: 'center'
+                }
+              ],
+              margin: 'md'
+            },
+            {
+              type: 'box',
+              layout: 'baseline',
+              contents: [
+                {
+                  type: 'text',
+                  text: '原價',
+                  flex: 1,
+                  size: 'sm',
+                  color: '#aaaaaa'
+                },
+                {
+                  type: 'text',
+                  flex: 5,
+                  size: 'sm',
+                  color: '#666666',
+                  wrap: true,
+                  text: `${current.price_old} USD / ${Math.round(current.price_old * exRateUSDTW * 100) / 100} TWD`
+                }
+              ]
+            },
+            {
+              type: 'box',
+              layout: 'baseline',
+              contents: [
+                {
+                  type: 'text',
+                  text: '目前',
+                  flex: 1,
+                  size: 'sm',
+                  color: '#aaaaaa'
+                },
+                {
+                  type: 'text',
+                  flex: 5,
+                  size: 'sm',
+                  color: '#666666',
+                  wrap: true,
+                  text: `${current.price_new} USD / ${Math.round(current.price_new * exRateUSDTW * 100) / 100} TWD, -${current.price_cut}%, 在 ${current.shop.name}`
+                }
+              ]
+            },
+            {
+              type: 'box',
+              layout: 'baseline',
+              contents: [
+                {
+                  type: 'text',
+                  text: '歷史',
+                  flex: 1,
+                  size: 'sm',
+                  color: '#aaaaaa'
+                },
+                {
+                  type: 'text',
+                  flex: 5,
+                  size: 'sm',
+                  color: '#666666',
+                  wrap: true,
+                  text: `${lowest.price} USD / ${Math.round(lowest.price * exRateUSDTW * 100) / 100} TWD, -${lowest.cut}%, ${formatDate(new Date(lowest.added * 1000))} 在 ${lowest.shop.name}`
+                }
+              ]
+            }
+          ],
+          spacing: 'sm',
+          margin: 'md'
+        }
+      )
 
-      /* is steam */
+      /* Steam */
       if (appInfo.id !== -1) {
-        let rSteam = '.\nSteam:\n'
-        rInfo += `https://store.steampowered.com/${appInfo.type}/${appInfo.id}/\n` +
-          `https://steamdb.info/${appInfo.type}/${appInfo.id}/`
+        flex.footer.contents.push(
+          {
+            type: 'button',
+            style: 'link',
+            action: {
+              type: 'uri',
+              label: 'Steam',
+              uri: `https://store.steampowered.com/${appInfo.type}/${appInfo.id}/`
+            },
+            margin: 'md',
+            height: 'sm'
+          },
+          {
+            type: 'button',
+            style: 'link',
+            action: {
+              type: 'uri',
+              label: 'SteamDB',
+              uri: `https://steamdb.info/${appInfo.type}/${appInfo.id}/`
+            },
+            margin: 'md',
+            height: 'sm'
+          }
+        )
 
         if (appInfo.type === 'app') {
-          reply.push({
+          flex.hero = {
             type: 'image',
-            originalContentUrl: `https://steamcdn-a.akamaihd.net/steam/apps/${appInfo.id}/header.jpg`,
-            previewImageUrl: `https://steamcdn-a.akamaihd.net/steam/apps/${appInfo.id}/header.jpg`
-          })
+            url: `https://steamcdn-a.akamaihd.net/steam/apps/${appInfo.id}/header.jpg`,
+            size: 'full',
+            aspectRatio: '460:215',
+            aspectMode: 'cover'
+          }
 
           htmlString = await rp(`http://store.steampowered.com/api/appdetails/?appids=${appInfo.id}&cc=tw&filters=price_overview`)
           const steamOV = JSON.parse(htmlString)
 
           if (steamOV[appInfo.id].success && typeof steamOV[appInfo.id].data === 'object') {
             const price = steamOV[appInfo.id].data.price_overview
-            rSteam += `原價: ${price.initial_formatted.length === 0 ? price.final_formatted : price.initial_formatted}, \n` +
-              `目前價格: ${price.final_formatted}, -${price.discount_percent}%\n`
+
+            flex.body.contents.push(
+              {
+                type: 'box',
+                layout: 'vertical',
+                spacing: 'sm',
+                contents: [
+                  {
+                    type: 'box',
+                    layout: 'baseline',
+                    contents: [
+                      {
+                        type: 'icon',
+                        url: 'https://raw.githubusercontent.com/rogeraabbccdd/Linebot-Deals/flex/steam.png'
+                      },
+                      {
+                        type: 'text',
+                        text: 'Steam',
+                        weight: 'bold',
+                        margin: 'sm',
+                        flex: 0,
+                        align: 'center'
+                      }
+                    ],
+                    margin: 'md'
+                  },
+                  {
+                    type: 'box',
+                    layout: 'baseline',
+                    contents: [
+                      {
+                        type: 'text',
+                        text: '原價',
+                        flex: 1,
+                        size: 'sm',
+                        color: '#aaaaaa'
+                      },
+                      {
+                        type: 'text',
+                        flex: 5,
+                        size: 'sm',
+                        color: '#666666',
+                        wrap: true,
+                        text: `${price.initial_formatted.length === 0 ? price.final_formatted : price.initial_formatted}`
+                      }
+                    ]
+                  },
+                  {
+                    type: 'box',
+                    layout: 'baseline',
+                    contents: [
+                      {
+                        type: 'text',
+                        text: '目前',
+                        flex: 1,
+                        size: 'sm',
+                        color: '#aaaaaa'
+                      },
+                      {
+                        type: 'text',
+                        flex: 5,
+                        size: 'sm',
+                        color: '#666666',
+                        wrap: true,
+                        text: `${price.final_formatted}, -${price.discount_percent}%`
+                      }
+                    ]
+                  }
+                ],
+                margin: 'md'
+              }
+            )
 
             // htmlString = await cloudscraper(`https://steamdb.info/api/ExtensionGetPrice/?appid=${appInfo.id}&currency=TWD`)
             // const steamLow = JSON.parse(htmlString)
-            // if (steamLow.success) rSteam += `歷史最低: ${steamLow.data.lowest.price}, -${steamLow.data.lowest.discount}%, ${formatDate(new Date(steamLow.data.lowest.date))}\n`
+            // history_low = ${steamLow.data.lowest.price}, -${steamLow.data.lowest.discount}%, ${formatDate(new Date(steamLow.data.lowest.date))}\n`
           }
         } else if (appInfo.type === 'sub') {
           htmlString = await rp(`https://store.steampowered.com/api/packagedetails/?packageids=${appInfo.id}&cc=tw`)
           const steamOV = JSON.parse(htmlString)
           if (steamOV[appInfo.id].success) {
             const { price } = steamOV[appInfo.id].data
-            rSteam += `原價:  NT$ ${price.initial / 100}\n` +
-              `單買原價:  NT$ ${price.individual / 100}\n` +
-              `目前價格:  NT$ ${price.final / 100}, -${price.discount_percent}%\n`
+
+            flex.body.contents.push(
+              {
+                type: 'box',
+                layout: 'vertical',
+                spacing: 'sm',
+                contents: [
+                  {
+                    type: 'box',
+                    layout: 'baseline',
+                    contents: [
+                      {
+                        type: 'icon',
+                        url: 'https://raw.githubusercontent.com/rogeraabbccdd/Linebot-Deals/flex/steam.png'
+                      },
+                      {
+                        type: 'text',
+                        text: 'Steam',
+                        weight: 'bold',
+                        margin: 'sm',
+                        flex: 0,
+                        align: 'center'
+                      }
+                    ],
+                    margin: 'md'
+                  },
+                  {
+                    type: 'box',
+                    layout: 'baseline',
+                    contents: [
+                      {
+                        type: 'text',
+                        text: '原價',
+                        flex: 1,
+                        size: 'sm',
+                        color: '#aaaaaa'
+                      },
+                      {
+                        type: 'text',
+                        flex: 5,
+                        size: 'sm',
+                        color: '#666666',
+                        wrap: true,
+                        text: `NT$ ${price.initial / 100}`
+                      }
+                    ]
+                  },
+                  {
+                    type: 'box',
+                    layout: 'baseline',
+                    contents: [
+                      {
+                        type: 'text',
+                        text: '目前',
+                        flex: 1,
+                        size: 'sm',
+                        color: '#aaaaaa'
+                      },
+                      {
+                        type: 'text',
+                        flex: 5,
+                        size: 'sm',
+                        color: '#666666',
+                        wrap: true,
+                        text: `NT$ ${price.final / 100}, -${price.discount_percent}%`
+                      }
+                    ]
+                  },
+                  {
+                    type: 'box',
+                    layout: 'baseline',
+                    contents: [
+                      {
+                        type: 'text',
+                        text: '單買',
+                        flex: 1,
+                        size: 'sm',
+                        color: '#aaaaaa'
+                      },
+                      {
+                        type: 'text',
+                        flex: 5,
+                        size: 'sm',
+                        color: '#666666',
+                        wrap: true,
+                        text: `NT$ ${price.individual / 100}%`
+                      }
+                    ]
+                  }
+                ],
+                margin: 'md'
+              }
+            )
           }
         }
-
-        replyText += rSteam
       }
+      // current.url
+      // https://isthereanydeal.com/game/${plain}/info/
 
-      replyText += rInfo
-      reply.push({ type: 'text', text: replyText })
+      // bundle info
+      htmlString = await rp(`https://api.isthereanydeal.com/v01/game/bundles/?key=${process.env.ITAD_KEY}&plains=${plain}&expired=0`)
+      const bundle = JSON.parse(htmlString).data[plain]
+
+      flex.body.contents.push(
+        {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'box',
+              layout: 'baseline',
+              contents: [
+                {
+                  type: 'icon',
+                  url: 'https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png'
+                },
+                {
+                  type: 'text',
+                  text: '入包',
+                  flex: 0,
+                  margin: 'sm',
+                  weight: 'bold',
+                  align: 'center'
+                }
+              ],
+              margin: 'md'
+            },
+            {
+              type: 'box',
+              layout: 'baseline',
+              contents: [
+                {
+                  type: 'text',
+                  text: '紀錄',
+                  flex: 1,
+                  size: 'sm',
+                  color: '#aaaaaa'
+                },
+                {
+                  type: 'text',
+                  flex: 5,
+                  size: 'sm',
+                  color: '#666666',
+                  wrap: true,
+                  text: `${bundle.total}`
+                }
+              ]
+            },
+            {
+              type: 'box',
+              layout: 'baseline',
+              contents: [
+                {
+                  type: 'text',
+                  text: '目前',
+                  flex: 1,
+                  size: 'sm',
+                  color: '#aaaaaa'
+                },
+                {
+                  type: 'text',
+                  flex: 5,
+                  size: 'sm',
+                  color: '#666666',
+                  wrap: true,
+                  text: `${bundle.list.length}`
+                }
+              ]
+            }
+          ],
+          spacing: 'sm',
+          margin: 'md'
+        }
+      )
+
+      reply.push({
+        type: 'flex',
+        altText: 'this is a flex message',
+        contents: {
+          type: 'carousel',
+          contents: [flex]
+        }
+      })
     }
   } catch (err) {
-    console.log(err)
-    if (replyText.length > 0) reply.push({ type: 'text', text: replyText })
-    else reply.push({ type: 'text', text: '遊戲資料查詢失敗，請稍後再試' })
+    reply.push({ type: 'text', text: '遊戲資料查詢失敗，請稍後再試' })
   }
   return reply
 }
 
-bot.on('message', (event) => {
+bot.on('message', async event => {
   const msg = event.message.text
   if (msg) {
     if (msg === '!itadhelp') {
@@ -181,10 +546,13 @@ bot.on('message', (event) => {
         '◆ 機器人原始碼: https://ppt.cc/f2YdNx\n'
       event.reply(reply)
     } else if (msg.substring(0, 6) === '!itad ') {
-      const name = msg.split('!itad ')[1]
-      getItadData(name).then((reply) => {
-        event.reply(reply)
-      })
+      try {
+        const name = msg.split('!itad ')[1]
+        const reply = await getItadData(name)
+        await event.reply(reply)
+      } catch (error) {
+        event.reply('遊戲資料查詢失敗，請稍後再試')
+      }
     }
   }
 })
