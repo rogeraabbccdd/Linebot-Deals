@@ -56,17 +56,20 @@ const getItadData = async (name) => {
     if (find.length === 0) {
       if (searchJson.data.list.length === 0) reply.push({ type: 'text', text: '找不到符合的遊戲' })
       else {
-        let suggestions = ''
-        searchJson.data.list.sort((a, b) => a.title.length - b.title.length || a.title.localeCompare(b.title))
-        suggestions = '找不到符合的遊戲，你是不是要找...\n'
+        // remove duplicate title in result and sort
+        const data = searchJson.data.list.filter((arr, index, self) =>
+          index === self.findIndex((t) => (t.title === arr.title))
+        ).sort((a, b) => a.title.length - b.title.length || a.title.localeCompare(b.title))
+
+        let suggestions = '找不到符合的遊戲，你是不是要找...\n'
 
         // j = array index
         let j = 0
         // i = max 5 suggestions
         for (let i = 0; i < 5; i++) {
-          if (searchJson.data.list[j]) {
-            if ((j === 0) || (j > 0 && !reply.includes(searchJson.data.list[j].title))) {
-              suggestions += `- ${searchJson.data.list[j].title}\n`
+          if (data[j]) {
+            if ((j === 0) || (j > 0 && !reply.includes(data[j].title))) {
+              suggestions += `- ${data[j].title}\n`
             } else i--
           } else break
           j++
