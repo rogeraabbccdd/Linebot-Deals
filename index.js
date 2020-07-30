@@ -2,7 +2,7 @@ require('dotenv').config()
 const linebot = require('linebot')
 const rp = require('request-promise')
 const schedule = require('node-schedule')
-const cloudscraper = require('cloudscraper')
+// const cloudscraper = require('cloudscraper')
 
 const bot = linebot({
   channelId: process.env.CHANNEL_ID,
