@@ -1,0 +1,294 @@
+{
+  "type": "bubble",
+  "hero": {
+    "type": "image",
+    "url": "https://steamcdn-a.akamaihd.net/steam/apps/1121560/header_tchinese.jpg?t=1596035124",
+    "size": "full",
+    "aspectRatio": "20:13",
+    "aspectMode": "cover"
+  },
+  "body": {
+    "type": "box",
+    "layout": "vertical",
+    "spacing": "md",
+    "contents": [
+      {
+        "type": "text",
+        "text": "萊莎的鍊金工房 ～常闇女王與秘密藏身處～",
+        "size": "xl",
+        "weight": "bold"
+      },
+      {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "box",
+            "layout": "baseline",
+            "contents": [
+              {
+                "type": "icon",
+                "url": "https://raw.githubusercontent.com/rogeraabbccdd/Linebot-Deals/flex/itad.png"
+              },
+              {
+                "type": "text",
+                "text": "IsThereAnyDeal",
+                "weight": "bold",
+                "margin": "sm",
+                "flex": 0,
+                "align": "center"
+              }
+            ],
+            "margin": "md"
+          },
+          {
+            "type": "box",
+            "layout": "baseline",
+            "contents": [
+              {
+                "type": "text",
+                "text": "原價",
+                "flex": 1,
+                "size": "sm",
+                "color": "#aaaaaa"
+              },
+              {
+                "type": "text",
+                "flex": 5,
+                "size": "sm",
+                "color": "#666666",
+                "wrap": true,
+                "text": "12.99 USD / 388.27 TWD"
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "baseline",
+            "contents": [
+              {
+                "type": "text",
+                "text": "目前",
+                "flex": 1,
+                "size": "sm",
+                "color": "#aaaaaa"
+              },
+              {
+                "type": "text",
+                "flex": 5,
+                "size": "sm",
+                "color": "#666666",
+                "wrap": true,
+                "text": "12.99 USD / 388.27 TWD, -0%, 在 Humble Store"
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "baseline",
+            "contents": [
+              {
+                "type": "text",
+                "text": "歷史",
+                "flex": 1,
+                "size": "sm",
+                "color": "#aaaaaa"
+              },
+              {
+                "type": "text",
+                "flex": 5,
+                "size": "sm",
+                "color": "#666666",
+                "wrap": true,
+                "text": "2.59 USD / 77.42 TWD, -80%, 2020年3月21日 在 Steam"
+              }
+            ]
+          }
+        ],
+        "spacing": "sm",
+        "margin": "md"
+      },
+      {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "box",
+            "layout": "baseline",
+            "contents": [
+              {
+                "type": "icon",
+                "url": "https://raw.githubusercontent.com/rogeraabbccdd/Linebot-Deals/flex/steam.png"
+              },
+              {
+                "type": "text",
+                "text": "Steam",
+                "weight": "bold",
+                "margin": "sm",
+                "flex": 0,
+                "align": "center"
+              }
+            ],
+            "margin": "md"
+          },
+          {
+            "type": "box",
+            "layout": "baseline",
+            "contents": [
+              {
+                "type": "text",
+                "text": "原價",
+                "flex": 1,
+                "size": "sm",
+                "color": "#aaaaaa"
+              },
+              {
+                "type": "text",
+                "flex": 5,
+                "size": "sm",
+                "color": "#666666",
+                "wrap": true,
+                "text": "NT$ 238"
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "baseline",
+            "contents": [
+              {
+                "type": "text",
+                "text": "目前",
+                "flex": 1,
+                "size": "sm",
+                "color": "#aaaaaa"
+              },
+              {
+                "type": "text",
+                "flex": 5,
+                "size": "sm",
+                "color": "#666666",
+                "wrap": true,
+                "text": "NT$ 238, -0%"
+              }
+            ]
+          }
+        ],
+        "margin": "md"
+      },
+      {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+          {
+            "type": "box",
+            "layout": "baseline",
+            "contents": [
+              {
+                "type": "icon",
+                "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png"
+              },
+              {
+                "type": "text",
+                "text": "其他資訊",
+                "flex": 0,
+                "margin": "sm",
+                "weight": "bold",
+                "align": "center"
+              }
+            ],
+            "margin": "md"
+          },
+          {
+            "type": "box",
+            "layout": "baseline",
+            "contents": [
+              {
+                "type": "text",
+                "text": "入包",
+                "flex": 1,
+                "size": "sm",
+                "color": "#aaaaaa"
+              },
+              {
+                "type": "text",
+                "flex": 5,
+                "size": "sm",
+                "color": "#666666",
+                "wrap": true,
+                "text": "4"
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "baseline",
+            "contents": [
+              {
+                "type": "text",
+                "text": "目前",
+                "flex": 1,
+                "size": "sm",
+                "color": "#aaaaaa"
+              },
+              {
+                "type": "text",
+                "flex": 5,
+                "size": "sm",
+                "color": "#666666",
+                "wrap": true,
+                "text": "4"
+              }
+            ]
+          }
+        ],
+        "spacing": "sm",
+        "margin": "md"
+      }
+    ]
+  },
+  "footer": {
+    "type": "box",
+    "layout": "vertical",
+    "contents": [
+      {
+        "type": "button",
+        "style": "link",
+        "action": {
+          "type": "uri",
+          "label": "IsThereAnyDeal",
+          "uri": "https://isthereanydeal.com/game/duckgame/info/"
+        },
+        "height": "sm"
+      },
+      {
+        "type": "button",
+        "style": "link",
+        "action": {
+          "type": "uri",
+          "label": "Steam",
+          "uri": "https://store.steampowered.com/app/312530/"
+        },
+        "margin": "md",
+        "height": "sm"
+      },
+      {
+        "type": "button",
+        "style": "link",
+        "action": {
+          "type": "uri",
+          "label": "SteamDB",
+          "uri": "https://steamdb.info/app/312530/"
+        },
+        "margin": "md",
+        "height": "sm"
+      }
+    ]
+  },
+  "styles": {
+    "footer": {
+      "separator": true
+    }
+  }
+}
