@@ -1,6 +1,7 @@
 # Deals Line Bot
 A linebot to get deals information form [isthereanydeal.com](https://isthereanydeal.com)  
-Click [here](https://line.me/R/ti/p/%40504mcsmm) to add the bot.
+Click [here](https://line.me/R/ti/p/%40504mcsmm) to add the bot.  
+**Bot is hosting on heroku free dyno, and will stop running after running out free hours.**
   
 ![preview](preview.png)  
   
