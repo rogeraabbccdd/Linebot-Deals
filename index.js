@@ -346,7 +346,7 @@ const getItadData = async (name) => {
                     contents: [
                       {
                         type: 'text',
-                        text: '最低',
+                        text: '歷史',
                         flex: 1,
                         size: 'sm',
                         color: '#aaaaaa'
@@ -357,7 +357,7 @@ const getItadData = async (name) => {
                         size: 'sm',
                         color: '#666666',
                         wrap: true,
-                        text: `${steamLow.data.lowest.price}, -${steamLow.data.lowest.discount}%`
+                        text: `${steamLow.data.lowest.price}, -${steamLow.data.lowest.discount}%, ${formatDate(new Date(steamLow.data.lowest.date))}`
                       }
                     ]
                   }
@@ -552,6 +552,7 @@ const getItadData = async (name) => {
       })
     }
   } catch (err) {
+    console.log(err)
     reply.push({ type: 'text', text: '遊戲資料查詢失敗，請稍後再試' })
   }
   return reply
