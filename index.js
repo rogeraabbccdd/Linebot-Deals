@@ -48,7 +48,7 @@ const getItadData = async (name) => {
     let json = {}
 
     /* search game */
-    json = await axios.get(`https://api.isthereanydeal.com/v01/search/search/?key=${process.env.ITAD_KEY}&q=${query}&offset=&limit=&region=us&country=US&shops=${itadShops}`)
+    json = await axios.get(`https://api.isthereanydeal.com/v01/search/search/?key=${process.env.ITAD_KEY}&q=${query}&offset=&limit=100&region=us&country=US&shops=${itadShops}`)
     const searchJson = json.data
     const find = getItadPlainByName(searchJson, name)
     if (find.length === 0) {
