@@ -46,6 +46,8 @@ const getItadData = async (name) => {
   try {
     const query = encodeURIComponent(name.trim())
     let json = {}
+    let json2 = {}
+    let json3 = {}
 
     /* search game */
     json = await axios.get(`https://api.isthereanydeal.com/v01/search/search/?key=${process.env.ITAD_KEY}&q=${query}&offset=&limit=100&region=us&country=US&shops=${itadShops}`)
@@ -80,10 +82,15 @@ const getItadData = async (name) => {
       const appTitle = find[0].title
       const appInfo = getSteamInfoByPlain(searchJson, plain)
 
-      json = await axios.get(`https://api.isthereanydeal.com/v01/game/lowest/?key=${process.env.ITAD_KEY}&plains=${plain}&shops=${itadShops}`)
+      json = axios.get(`https://api.isthereanydeal.com/v01/game/lowest/?key=${process.env.ITAD_KEY}&plains=${plain}&shops=${itadShops}`)
+      json2 = axios.get(`https://api.isthereanydeal.com/v01/game/prices/?key=${process.env.ITAD_KEY}&plains=${plain}&shops=${itadShops}`)
+      json3 = axios.get(`https://api.isthereanydeal.com/v01/game/bundles/?key=${process.env.ITAD_KEY}&plains=${plain}&expired=0`)
+      json = await json
+      json2 = await json2
+      json3 = await json3
       const lowest = json.data.data[plain]
-      json = await axios.get(`https://api.isthereanydeal.com/v01/game/prices/?key=${process.env.ITAD_KEY}&plains=${plain}&shops=${itadShops}`)
-      const current = json.data.data[plain].list[0]
+      const current = json2.data.data[plain].list[0]
+      const bundle = json3.data.data[plain]
 
       const flex = {
         type: 'bubble',
@@ -462,10 +469,6 @@ const getItadData = async (name) => {
       }
       // current.url
       // https://isthereanydeal.com/game/${plain}/info/
-
-      // bundle info
-      json = await axios.get(`https://api.isthereanydeal.com/v01/game/bundles/?key=${process.env.ITAD_KEY}&plains=${plain}&expired=0`)
-      const bundle = json.data.data[plain]
 
       flex.body.contents.push(
         {
