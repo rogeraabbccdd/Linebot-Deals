@@ -1,8 +1,7 @@
 require('dotenv').config()
 const linebot = require('linebot')
-const rp = require('request-promise')
+const axios = require('axios')
 const schedule = require('node-schedule')
-// const cloudscraper = require('cloudscraper')
 
 const bot = linebot({
   channelId: process.env.CHANNEL_ID,
@@ -30,9 +29,9 @@ const itadShops = 'amazonus,bundlestars,chrono,direct2drive,dlgamer,dreamgame,fi
 
 let exRateUSDTW = 30
 
-const exRateUpdate = () => {
-  rp('https://tw.rter.info/capi.php').then((res) => {
-    exRateUSDTW = Math.round(JSON.parse(res).USDTWD.Exrate * 100) / 100
+const exRateUpdate = async () => {
+  axios.get('https://tw.rter.info/capi.php').then((res) => {
+    exRateUSDTW = Math.round(res.data.USDTWD.Exrate * 100) / 100
   })
 }
 
@@ -46,11 +45,11 @@ const getItadData = async (name) => {
   const reply = []
   try {
     const query = encodeURIComponent(name.trim())
-    let htmlString = ''
+    let json = {}
 
     /* search game */
-    htmlString = await rp(`https://api.isthereanydeal.com/v01/search/search/?key=${process.env.ITAD_KEY}&q=${query}&offset=&limit=&region=us&country=US&shops=${itadShops}`)
-    const searchJson = JSON.parse(htmlString)
+    json = await axios.get(`https://api.isthereanydeal.com/v01/search/search/?key=${process.env.ITAD_KEY}&q=${query}&offset=&limit=&region=us&country=US&shops=${itadShops}`)
+    const searchJson = json.data
     const find = getItadPlainByName(searchJson, name)
     if (find.length === 0) {
       if (searchJson.data.list.length === 0) reply.push({ type: 'text', text: '找不到符合的遊戲' })
@@ -81,10 +80,10 @@ const getItadData = async (name) => {
       const appTitle = find[0].title
       const appInfo = getSteamInfoByPlain(searchJson, plain)
 
-      htmlString = await rp(`https://api.isthereanydeal.com/v01/game/lowest/?key=${process.env.ITAD_KEY}&plains=${plain}&shops=${itadShops}`)
-      const lowest = JSON.parse(htmlString).data[plain]
-      htmlString = await rp(`https://api.isthereanydeal.com/v01/game/prices/?key=${process.env.ITAD_KEY}&plains=${plain}&shops=${itadShops}`)
-      const current = JSON.parse(htmlString).data[plain].list[0]
+      json = await axios.get(`https://api.isthereanydeal.com/v01/game/lowest/?key=${process.env.ITAD_KEY}&plains=${plain}&shops=${itadShops}`)
+      const lowest = json.data.data[plain]
+      json = await axios.get(`https://api.isthereanydeal.com/v01/game/prices/?key=${process.env.ITAD_KEY}&plains=${plain}&shops=${itadShops}`)
+      const current = json.data.data[plain].list[0]
 
       const flex = {
         type: 'bubble',
@@ -254,8 +253,8 @@ const getItadData = async (name) => {
             aspectMode: 'cover'
           }
 
-          htmlString = await rp(`http://store.steampowered.com/api/appdetails/?appids=${appInfo.id}&cc=tw&filters=price_overview`)
-          const steamOV = JSON.parse(htmlString)
+          json = await axios.get(`http://store.steampowered.com/api/appdetails/?appids=${appInfo.id}&cc=tw&filters=price_overview`)
+          const steamOV = json.data
 
           if (steamOV[appInfo.id].success && typeof steamOV[appInfo.id].data === 'object') {
             const price = steamOV[appInfo.id].data.price_overview
@@ -331,14 +330,10 @@ const getItadData = async (name) => {
                 margin: 'md'
               }
             )
-
-            // htmlString = await cloudscraper(`https://steamdb.info/api/ExtensionGetPrice/?appid=${appInfo.id}&currency=TWD`)
-            // const steamLow = JSON.parse(htmlString)
-            // history_low = ${steamLow.data.lowest.price}, -${steamLow.data.lowest.discount}%, ${formatDate(new Date(steamLow.data.lowest.date))}\n`
           }
         } else if (appInfo.type === 'sub') {
-          htmlString = await rp(`https://store.steampowered.com/api/packagedetails/?packageids=${appInfo.id}&cc=tw`)
-          const steamOV = JSON.parse(htmlString)
+          json = await axios(`https://store.steampowered.com/api/packagedetails/?packageids=${appInfo.id}&cc=tw`)
+          const steamOV = json.data
           if (steamOV[appInfo.id].success) {
             const { price } = steamOV[appInfo.id].data
 
@@ -441,8 +436,8 @@ const getItadData = async (name) => {
       // https://isthereanydeal.com/game/${plain}/info/
 
       // bundle info
-      htmlString = await rp(`https://api.isthereanydeal.com/v01/game/bundles/?key=${process.env.ITAD_KEY}&plains=${plain}&expired=0`)
-      const bundle = JSON.parse(htmlString).data[plain]
+      json = await axios.get(`https://api.isthereanydeal.com/v01/game/bundles/?key=${process.env.ITAD_KEY}&plains=${plain}&expired=0`)
+      const bundle = json.data.data[plain]
 
       flex.body.contents.push(
         {
