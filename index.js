@@ -259,6 +259,13 @@ const getItadData = async (name) => {
           if (steamOV[appInfo.id].success && typeof steamOV[appInfo.id].data === 'object') {
             const price = steamOV[appInfo.id].data.price_overview
 
+            json = await axios.get(`https://steamdb.info/api/ExtensionGetPrice/?appid=${appInfo.id}&currency=TWD`, {
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36'
+              }
+            })
+            const steamLow = json.data
+
             flex.body.contents.push(
               {
                 type: 'box',
@@ -323,6 +330,27 @@ const getItadData = async (name) => {
                         color: '#666666',
                         wrap: true,
                         text: `${price.final_formatted}, -${price.discount_percent}%`
+                      }
+                    ]
+                  },
+                  {
+                    type: 'box',
+                    layout: 'baseline',
+                    contents: [
+                      {
+                        type: 'text',
+                        text: '最低',
+                        flex: 1,
+                        size: 'sm',
+                        color: '#aaaaaa'
+                      },
+                      {
+                        type: 'text',
+                        flex: 5,
+                        size: 'sm',
+                        color: '#666666',
+                        wrap: true,
+                        text: `${steamLow.data.lowest.price}, -${steamLow.data.lowest.discount}%`
                       }
                     ]
                   }
