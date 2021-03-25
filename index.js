@@ -10,7 +10,7 @@ const bot = linebot({
 })
 
 const formatDate = (date) => {
-  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
+  return `${date.getFullYear()} 年 ${date.getMonth() + 1} 月 ${date.getDate()} 日`
 }
 
 const getItadPlainByName = (json, name) => json.data.list.filter((list) => list.title.trim().toUpperCase() === name.trim().toUpperCase())
@@ -214,7 +214,7 @@ const getItadData = async (name) => {
                   size: 'sm',
                   color: '#666666',
                   wrap: true,
-                  text: `${lowest.price} USD / ${Math.round(lowest.price * exRateUSDTW * 100) / 100} TWD, -${lowest.cut}%, ${formatDate(new Date(lowest.added * 1000))} 在 ${lowest.shop.name}`
+                  text: `${lowest.price} USD / ${Math.round(lowest.price * exRateUSDTW * 100) / 100} TWD, -${lowest.cut}%, ${formatDate(new Date(lowest.added * 1000))}在 ${lowest.shop.name}`
                 }
               ]
             }
@@ -272,6 +272,12 @@ const getItadData = async (name) => {
               }
             })
             const steamLow = json.data
+
+            const lowestRegex = /(?<date1>\d+\s[A-Za-z]+\s+\d+)\s\((?<times>\d+)\stimes,\sfirst\son\s(?<date2>\d+\s[A-Za-z]+\s+\d+)\)/
+            const lowestResults = steamLow.data.lowest.date.match(lowestRegex)
+            let lowestStr = ''
+            if (lowestResults) lowestStr += `最近一次為 ${formatDate(new Date(lowestResults.groups.date1))}, 從 ${formatDate(new Date(lowestResults.groups.date2))}開始共出現 ${lowestResults.groups.times} 次`
+            else lowestStr += formatDate(new Date(steamLow.data.lowest.date))
 
             flex.body.contents.push(
               {
@@ -357,7 +363,7 @@ const getItadData = async (name) => {
                         size: 'sm',
                         color: '#666666',
                         wrap: true,
-                        text: `${steamLow.data.lowest.price}, -${steamLow.data.lowest.discount}%, ${formatDate(new Date(steamLow.data.lowest.date))}`
+                        text: `${steamLow.data.lowest.price}, -${steamLow.data.lowest.discount}%, ${lowestStr}`
                       }
                     ]
                   }
