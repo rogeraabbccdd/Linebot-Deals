@@ -21,9 +21,9 @@ const bot = linebot({
 const itadShops = 'amazonus,bundlestars,chrono,direct2drive,dlgamer,dreamgame,fireflower,gamebillet,gamejolt,gamersgate,gamesplanet,gog,humblestore,humblewidgets,impulse,indiegalastore,indiegamestand,itchio,macgamestore,newegg,origin,paradox,savemi,silagames,squenix,steam,uplay,wingamestore'
 
 let exRateUSDTW = 30
-exRateUSDTW = exRateUpdate()
-schedule.scheduleJob('0 0 0 * * *', () => {
-  exRateUSDTW = exRateUpdate()
+
+schedule.scheduleJob('0 0 0 * * *', async () => {
+  exRateUSDTW = await exRateUpdate()
 })
 
 const getItadData = async (name) => {
@@ -559,6 +559,7 @@ bot.on('message', async event => {
   }
 })
 
-bot.listen('/', process.env.PORT, () => {
+bot.listen('/', process.env.PORT, async () => {
+  exRateUSDTW = exRateUpdate()
   console.log(`Bot is ready in ${process.env.PORT}`)
 })
