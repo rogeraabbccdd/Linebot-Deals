@@ -431,7 +431,7 @@ const getItadData = async (name) => {
                         size: 'sm',
                         color: '#666666',
                         wrap: true,
-                        text: `NT$ ${price.individual / 100}%`
+                        text: `NT$ ${price.individual / 100}`
                       }
                     ]
                   }
