@@ -37,7 +37,7 @@ const exRateUpdate = async () => {
 
 exRateUpdate()
 
-schedule.scheduleJob('* * 0 * * *', () => {
+schedule.scheduleJob('0 0 0 * * *', () => {
   exRateUpdate()
 })
 
