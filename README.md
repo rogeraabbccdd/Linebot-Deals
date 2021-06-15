@@ -22,6 +22,9 @@ Click [here](https://line.me/R/ti/p/%40504mcsmm) to add the bot.
 
     # Your isthereanydeal API key
     ITAD_KEY=""
+
+    # If "true", print detail axios error object
+    ERROR="false"
   ```
 
 - Run `npm install` to install dependencies.
