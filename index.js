@@ -1,4 +1,5 @@
 require('dotenv').config()
+const express = require('express')
 const linebot = require('linebot')
 const schedule = require('node-schedule')
 
@@ -11,6 +12,8 @@ const fetchItad = require('./funcs/fetchItad')
 const fetchSteamApp = require('./funcs/fetchSteamApp')
 const fetchSteamDB = require('./funcs/fetchSteamDB')
 const fetchSteamPackage = require('./funcs/fetchSteamPackage')
+
+const app = express()
 
 const bot = linebot({
   channelId: process.env.CHANNEL_ID,
@@ -559,7 +562,20 @@ bot.on('message', async event => {
   }
 })
 
-bot.listen('/', process.env.PORT, async () => {
+// bot.listen('/', process.env.PORT, async () => {
+//   exRateUSDTW = exRateUpdate()
+//   console.log(`Bot is ready in ${process.env.PORT}`)
+// })
+
+const linebotParser = bot.parser()
+
+app.post('/linewebhook', linebotParser)
+
+app.get('/', (req, res) => {
+  res.status(200).send('')
+})
+
+app.listen(process.env.PORT || 3000, () => {
   exRateUSDTW = exRateUpdate()
   console.log(`Bot is ready in ${process.env.PORT}`)
 })
